@@ -123,7 +123,10 @@ async function viewHome() {
         <div><label for="clientName">Client name</label><input id="clientName" name="clientName" placeholder="Mark Ellison"></div>
         <div><label for="clientEmail">Client email <span class="hint">for invoices</span></label><input id="clientEmail" name="clientEmail" type="email" required placeholder="client@example.com"></div>
       </div>
-      <div class="field"><label for="yourName">Your name</label><input id="yourName" name="yourName" placeholder="Ayu Pratiwi"></div>
+      <div class="row field">
+        <div><label for="yourName">Your name</label><input id="yourName" name="yourName" placeholder="Ayu Pratiwi"></div>
+        <div><label for="hourlyRate">Hourly rate <span class="hint">for change orders</span></label><input id="hourlyRate" name="hourlyRate" type="number" min="1" step="1" placeholder="25"></div>
+      </div>
       <button class="btn" type="submit" ${state.busy.plan ? 'disabled' : ''}>${spin('plan', 'Draft milestones with AI', 'Reading the brief…')}</button>
       <div id="formErr"></div>
     </form>
@@ -179,7 +182,7 @@ function viewPlan() {
   $app.innerHTML = `
   <div class="plan-head">
     <div><p class="muted" style="margin:0 0 6px">Drafted by AI from ${h(inputs.clientName || 'your client')}'s brief. Edit anything before sharing.</p>
-    <h1><input aria-label="Project title" data-plan="projectTitle" value="${h(plan.projectTitle)}" style="font:inherit;border:0;background:transparent;padding:0;width:100%"></h1></div>
+    <h1><textarea aria-label="Project title" data-plan="projectTitle" rows="1" class="title-edit">${h(plan.projectTitle)}</textarea></h1></div>
     <div style="text-align:right"><div class="amount">${money(total, cur)}</div><span class="small ${Math.abs(total - inputs.budget) > 0.01 ? '' : 'muted'}" style="${Math.abs(total - inputs.budget) > 0.01 ? 'color:var(--stamp)' : ''}">${Math.abs(total - inputs.budget) > 0.01 ? `Budget was ${money(inputs.budget, cur)}` : 'Matches the agreed budget'}</span></div>
   </div>
   <div class="layout">
@@ -216,6 +219,10 @@ function viewPlan() {
       </div>
     </aside>
   </div>`;
+  const te = $app.querySelector('.title-edit');
+  const fit = () => { te.style.height = 'auto'; te.style.height = te.scrollHeight + 'px'; };
+  fit();
+  te.addEventListener('input', fit);
 }
 
 function syncPlanInputs() {
@@ -454,7 +461,7 @@ $app.addEventListener('click', async (e) => {
   if (a === 'sample') {
     const f = document.getElementById('newForm');
     f.brief.value = SAMPLE.brief; f.budget.value = SAMPLE.budget; f.deadlineDays.value = SAMPLE.deadlineDays;
-    f.clientName.value = SAMPLE.clientName; f.yourName.value = SAMPLE.yourName;
+    f.clientName.value = SAMPLE.clientName; f.yourName.value = SAMPLE.yourName; f.hourlyRate.value = 25;
     f.clientEmail.focus();
     toast('Sample filled in. Add a client email (your sandbox personal account works) to continue.');
   }
@@ -466,7 +473,7 @@ $app.addEventListener('click', async (e) => {
     const { plan, inputs } = state.draft;
     if (plan.milestones.some((m) => !(m.amount > 0) || !m.criteria.length)) return toast('Every milestone needs an amount and at least one acceptance criterion.', true);
     await withBusy('save', async () => {
-      const project = await api('POST', '/api/projects', { plan, brief: inputs.brief, currency: inputs.currency, freelancer: { name: inputs.yourName || 'Freelancer' }, client: { name: inputs.clientName || 'Client', email: inputs.clientEmail } });
+      const project = await api('POST', '/api/projects', { plan, brief: inputs.brief, currency: inputs.currency, hourlyRate: Number(inputs.hourlyRate) || null, freelancer: { name: inputs.yourName || 'Freelancer' }, client: { name: inputs.clientName || 'Client', email: inputs.clientEmail } });
       sessionStorage.removeItem('mp-draft'); state.draft = null;
       location.hash = `#/p/${project.id}`;
       toast('Agreement created. Send the client link so they can fund the first milestone.');

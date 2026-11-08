@@ -122,6 +122,9 @@ textarea { resize: vertical; min-height: 110px; }
 .legend b { color: var(--ink); }
 
 /* ---------- plan review ---------- */
+.title-edit { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: transparent; padding: 0; width: 100%; resize: none; overflow: hidden; min-height: 0; line-height: 1.1; display: block; }
+.title-edit:focus { box-shadow: none; border-bottom: 2px dashed var(--line); }
+.plan-head > div:first-child { flex: 1 1 520px; min-width: 0; }
 .plan-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
 .ms-edit { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 20px 0; border-top: 1px solid var(--line); }
 .ms-edit:first-of-type { border-top: 0; }
